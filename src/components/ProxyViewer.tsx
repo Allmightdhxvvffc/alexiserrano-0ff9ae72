@@ -69,15 +69,43 @@ const ProxyViewer = ({ html, url, onClose }: ProxyViewerProps) => {
   const injectedHtml = currentHtml.replace(
     "</body>",
     `<script>
+      function extractRealUrl(href) {
+        try {
+          var u = new URL(href);
+          // DuckDuckGo redirect links
+          if (u.hostname.includes('duckduckgo.com') && u.pathname === '/l/') {
+            var uddg = u.searchParams.get('uddg');
+            if (uddg) return uddg;
+          }
+          // Google redirect links
+          if (u.hostname.includes('google.com') && u.pathname === '/url') {
+            var q = u.searchParams.get('q') || u.searchParams.get('url');
+            if (q) return q;
+          }
+        } catch(e) {}
+        return href;
+      }
       document.addEventListener('click', function(e) {
         var link = e.target.closest('a');
         if (link && link.href && !link.href.startsWith('javascript:') && !link.href.startsWith('#')) {
           e.preventDefault();
           e.stopPropagation();
-          window.parent.postMessage({ type: 'proxy-navigate', url: link.href }, '*');
+          var realUrl = extractRealUrl(link.href);
+          window.parent.postMessage({ type: 'proxy-navigate', url: realUrl }, '*');
         }
       }, true);
       document.addEventListener('submit', function(e) {
+        var form = e.target;
+        // Allow DuckDuckGo search form submissions
+        if (form.action && form.action.includes('duckduckgo.com')) {
+          e.preventDefault();
+          var formData = new FormData(form);
+          var q = formData.get('q');
+          if (q) {
+            window.parent.postMessage({ type: 'proxy-navigate', url: 'https://lite.duckduckgo.com/lite/?q=' + encodeURIComponent(q) }, '*');
+          }
+          return;
+        }
         e.preventDefault();
         window.parent.postMessage({ type: 'proxy-alert', message: 'Form submissions are not supported through the proxy.' }, '*');
       }, true);

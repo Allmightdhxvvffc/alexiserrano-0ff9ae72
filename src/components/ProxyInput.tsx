@@ -32,7 +32,7 @@ const ProxyInput = ({ onResult, onLoading }: ProxyInputProps) => {
     const shouldSearch = mode === "search" || (mode === "auto" && !isUrl(trimmed));
 
     if (shouldSearch) {
-      targetUrl = `https://www.google.com/search?q=${encodeURIComponent(trimmed)}&safe=active`;
+      targetUrl = `https://lite.duckduckgo.com/lite/?q=${encodeURIComponent(trimmed)}`;
     } else {
       targetUrl = trimmed;
     }
