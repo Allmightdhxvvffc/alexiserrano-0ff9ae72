@@ -101,6 +101,7 @@ const mediaCategories = [
       { name: "Kanopy", url: "https://www.kanopy.com" },
       { name: "Vudu Free", url: "https://www.vudu.com/content/movies/free" },
       { name: "Internet Archive", url: "https://archive.org/details/movies" },
+      { name: "GoMovies", url: "https://gomovies.sx" },
     ],
   },
   {
