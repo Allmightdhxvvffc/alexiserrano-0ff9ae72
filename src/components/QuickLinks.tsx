@@ -101,6 +101,7 @@ const mediaCategories = [
       { name: "Kanopy", url: "https://www.kanopy.com" },
       { name: "Vudu Free", url: "https://www.vudu.com/content/movies/free" },
       { name: "Internet Archive", url: "https://archive.org/details/movies" },
+      { name: "GoMovies", url: "https://gomovies.sx" },
     ],
   },
   {
@@ -127,6 +128,7 @@ const mediaCategories = [
       { name: "MyAnimeList", url: "https://myanimelist.net" },
       { name: "AniList", url: "https://anilist.co" },
       { name: "Anime-Planet", url: "https://www.anime-planet.com" },
+      { name: "9anime", url: "https://9animetv.to" },
       { name: "RetroCrush", url: "https://www.retrocrush.tv" },
       { name: "Tubi Anime", url: "https://tubitv.com/category/anime" },
       { name: "Pluto Anime", url: "https://pluto.tv/live-tv/anime-all-day" },
