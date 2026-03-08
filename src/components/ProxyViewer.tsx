@@ -85,7 +85,7 @@ const ProxyViewer = ({ html, url, onClose }: ProxyViewerProps) => {
   );
 
   // Listen for messages from the iframe
-  useState(() => {
+  React.useEffect(() => {
     const handler = (e: MessageEvent) => {
       if (e.data?.type === 'proxy-navigate' && e.data.url) {
         navigateTo(e.data.url);
@@ -96,7 +96,7 @@ const ProxyViewer = ({ html, url, onClose }: ProxyViewerProps) => {
     };
     window.addEventListener('message', handler);
     return () => window.removeEventListener('message', handler);
-  });
+  }, [navigateTo]);
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-background">
