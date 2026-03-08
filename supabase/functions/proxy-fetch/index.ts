@@ -97,6 +97,12 @@ function rewriteHtml(html: string, baseUrl: string): string {
 (function() {
   var PROXY = "${PROXY_BASE}";
   
+  function postNav(proxyUrl, targetUrl) {
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({ type: 'proxy-navigate', url: proxyUrl, targetUrl: targetUrl }, '*');
+    }
+  }
+  
   // Intercept link clicks
   document.addEventListener('click', function(e) {
     var link = e.target.closest('a');
@@ -116,29 +122,25 @@ function rewriteHtml(html: string, baseUrl: string): string {
       }
     } catch(ex) {}
     
-    // If it's already a proxy URL, just navigate
-    if (href.includes('/functions/v1/proxy-fetch')) {
-      window.location.href = href;
-    } else {
-      window.location.href = PROXY + '?url=' + encodeURIComponent(href);
-    }
+    var pUrl = PROXY + '?url=' + encodeURIComponent(href);
+    postNav(pUrl, href);
   }, true);
   
   // Intercept form submissions  
   document.addEventListener('submit', function(e) {
     var form = e.target;
-    if (!form || !form.action) return;
+    if (!form) return;
     
     e.preventDefault();
     var formData = new FormData(form);
     var params = new URLSearchParams(formData).toString();
     var action = form.action || window.location.href;
     
-    // For GET forms, append params to URL
     if (!form.method || form.method.toUpperCase() === 'GET') {
       var sep = action.includes('?') ? '&' : '?';
       var targetUrl = action + sep + params;
-      window.location.href = PROXY + '?url=' + encodeURIComponent(targetUrl);
+      var pUrl = PROXY + '?url=' + encodeURIComponent(targetUrl);
+      postNav(pUrl, targetUrl);
     }
   }, true);
 })();
