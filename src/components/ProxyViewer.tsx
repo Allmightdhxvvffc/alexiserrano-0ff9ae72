@@ -18,6 +18,11 @@ const ProxyViewer = ({ proxyUrl, targetUrl, onClose }: ProxyViewerProps) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const loadPage = useCallback(async (pUrl: string, tUrl: string, addToHistory = true) => {
+    if (!pUrl || !tUrl) {
+      onClose();
+      return;
+    }
+
     setIsLoading(true);
     setCurrentTargetUrl(tUrl);
     setUrlInput(tUrl);
@@ -38,7 +43,6 @@ const ProxyViewer = ({ proxyUrl, targetUrl, onClose }: ProxyViewerProps) => {
         setHistoryIndex(newHistory.length - 1);
       }
 
-      // Check for final URL from proxy header
       const finalUrl = response.headers.get("x-final-url") || tUrl;
       setCurrentTargetUrl(finalUrl);
       setUrlInput(finalUrl);
@@ -57,17 +61,21 @@ const ProxyViewer = ({ proxyUrl, targetUrl, onClose }: ProxyViewerProps) => {
     } finally {
       setIsLoading(false);
     }
-  }, [history, historyIndex]);
+  }, [history, historyIndex, onClose]);
 
   useEffect(() => {
     loadPage(proxyUrl, targetUrl, false);
   }, []); // eslint-disable-line
 
-  // Listen for navigation from injected scripts
+  // Listen for navigation messages from injected scripts
   useEffect(() => {
     const handler = (e: MessageEvent) => {
       if (e.data?.type === "proxy-navigate" && e.data.url) {
         loadPage(e.data.url, e.data.targetUrl || e.data.url);
+      } else if (e.data?.type === "proxy-url-change" && e.data.targetUrl) {
+        // History pushState/replaceState - just update the URL bar
+        setCurrentTargetUrl(e.data.targetUrl);
+        setUrlInput(e.data.targetUrl);
       }
     };
     window.addEventListener("message", handler);
@@ -99,7 +107,6 @@ const ProxyViewer = ({ proxyUrl, targetUrl, onClose }: ProxyViewerProps) => {
     if (!/^https?:\/\//i.test(url) && /\.\w{2,}/.test(url)) {
       url = "https://" + url;
     } else if (!/^https?:\/\//i.test(url)) {
-      // Treat as search
       url = `https://lite.duckduckgo.com/lite/?q=${encodeURIComponent(url)}`;
     }
 
@@ -115,10 +122,6 @@ const ProxyViewer = ({ proxyUrl, targetUrl, onClose }: ProxyViewerProps) => {
       toast.error(err.message || "Failed to navigate");
     }
   };
-
-  const hostname = (() => {
-    try { return new URL(currentTargetUrl).hostname; } catch { return currentTargetUrl; }
-  })();
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-background">
@@ -140,7 +143,6 @@ const ProxyViewer = ({ proxyUrl, targetUrl, onClose }: ProxyViewerProps) => {
           <Home className="w-4 h-4" />
         </button>
 
-        {/* URL bar with input */}
         <form onSubmit={handleUrlSubmit} className="flex-1 mx-1">
           <div className="flex items-center bg-secondary rounded-md px-2 py-1">
             <Lock className="w-3 h-3 text-primary/70 mr-1.5 flex-shrink-0" />
@@ -162,7 +164,7 @@ const ProxyViewer = ({ proxyUrl, targetUrl, onClose }: ProxyViewerProps) => {
       {/* Loading bar */}
       {isLoading && (
         <div className="h-0.5 w-full bg-secondary overflow-hidden">
-          <div className="h-full bg-primary w-full animate-[loading_1.5s_ease-in-out_infinite]" style={{
+          <div className="h-full bg-primary w-full" style={{
             background: 'linear-gradient(90deg, transparent, hsl(var(--primary)), transparent)',
             animation: 'loading 1.5s ease-in-out infinite',
           }} />
