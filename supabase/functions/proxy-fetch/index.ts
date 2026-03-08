@@ -74,6 +74,11 @@ serve(async (req) => {
       html = html.replace(/<meta[^>]*http-equiv=["']?Content-Security-Policy["']?[^>]*>/gi, "");
       // Remove X-Frame-Options meta
       html = html.replace(/<meta[^>]*http-equiv=["']?X-Frame-Options["']?[^>]*>/gi, "");
+      // Remove referrer policy meta that could leak proxy usage
+      html = html.replace(/<meta[^>]*name=["']?referrer["']?[^>]*>/gi, "");
+      // Inject no-referrer policy to prevent leaking the proxy origin
+      const referrerTag = '<meta name="referrer" content="no-referrer">';
+      html = html.replace(/<head>/i, `<head>${referrerTag}`);
 
       return new Response(
         JSON.stringify({ html, finalUrl, contentType: "text/html" }),

@@ -40,7 +40,8 @@ const MatrixRain = () => {
       ctx.globalAlpha = 1;
     };
 
-    const interval = setInterval(draw, 50);
+    // Slower interval for Chromebook performance
+    const interval = setInterval(draw, 66);
     return () => {
       clearInterval(interval);
       window.removeEventListener("resize", resize);
