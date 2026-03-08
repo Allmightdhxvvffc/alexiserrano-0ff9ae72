@@ -30,22 +30,31 @@ function getHeaders() {
 function rewriteUrls(html: string, baseUrl: string): string {
   const proxyBase = `${SUPABASE_URL}/functions/v1/proxy-fetch`;
 
-  // Rewrite image src, link href (CSS), script src to go through proxy-asset
-  // We'll rewrite absolute URLs in src/href attributes to proxy them
+  // Rewrite src attributes (images, scripts, iframes) to go through proxy
   html = html.replace(
-    /(src|href|action)=(["'])((?:https?:)?\/\/[^"']+)\2/gi,
-    (match, attr, quote, url) => {
-      // Don't proxy data: URIs, anchors, or javascript:
-      if (url.startsWith("data:") || url.startsWith("javascript:") || url.startsWith("#")) {
-        return match;
-      }
-      // Make protocol-relative URLs absolute
-      let absoluteUrl = url;
-      if (url.startsWith("//")) {
-        absoluteUrl = "https:" + url;
-      }
-      // For CSS/JS/images, use the asset proxy endpoint
-      return `${attr}=${quote}${proxyBase}?asset=${encodeURIComponent(absoluteUrl)}${quote}`;
+    /(<(?:img|script|iframe|source|video|audio|embed)[^>]*?\s)src=(["'])((?:https?:)?\/\/[^"']+)\2/gi,
+    (match, prefix, quote, url) => {
+      if (url.startsWith("data:")) return match;
+      let absoluteUrl = url.startsWith("//") ? "https:" + url : url;
+      return `${prefix}src=${quote}${proxyBase}?asset=${encodeURIComponent(absoluteUrl)}${quote}`;
+    }
+  );
+
+  // Rewrite link[rel=stylesheet] href to go through proxy
+  html = html.replace(
+    /(<link[^>]*?rel=["']stylesheet["'][^>]*?\s)href=(["'])((?:https?:)?\/\/[^"']+)\2/gi,
+    (match, prefix, quote, url) => {
+      let absoluteUrl = url.startsWith("//") ? "https:" + url : url;
+      return `${prefix}href=${quote}${proxyBase}?asset=${encodeURIComponent(absoluteUrl)}${quote}`;
+    }
+  );
+
+  // Also catch link href before rel attribute
+  html = html.replace(
+    /(<link[^>]*?)href=(["'])((?:https?:)?\/\/[^"']+)\2([^>]*?rel=["']stylesheet["'])/gi,
+    (match, prefix, quote, url, suffix) => {
+      let absoluteUrl = url.startsWith("//") ? "https:" + url : url;
+      return `${prefix}href=${quote}${proxyBase}?asset=${encodeURIComponent(absoluteUrl)}${quote}${suffix}`;
     }
   );
 
