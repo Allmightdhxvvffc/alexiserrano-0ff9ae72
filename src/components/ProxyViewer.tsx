@@ -172,8 +172,9 @@ const ProxyViewer = ({ html, url, onClose }: ProxyViewerProps) => {
         ref={iframeRef}
         srcDoc={injectedHtml}
         className="flex-1 w-full bg-white"
-        sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
+        sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-modals"
         title="Proxied content"
+        referrerPolicy="no-referrer"
       />
     </div>
   );
